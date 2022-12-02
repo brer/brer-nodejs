@@ -11,22 +11,46 @@ export interface Context {
    */
   contentType: string;
   /**
-   * The triggered Function's name.
+   * The Invoication's identifier that was created by the Function.
+   */
+  invocation: Invocation;
+}
+
+export interface Invocation {
+  /**
+   * Invocation identifier.
+   */
+  _id: string;
+  /**
+   * Name of the invoking function.
    */
   functionName: string;
   /**
-   * The Invoication's identifier that was created by the Function.
+   * TODO: other fields
    */
-  invocationId: string;
+  [key: string]: any;
+}
+
+/**
+ * Just like `Promise.allSettled` output.
+ */
+export interface Result {
+  /**
+   * Promise result status.
+   */
+  status: "fulfilled" | "rejected";
+  /**
+   * Fulfillment value.
+   */
+  reason: any;
+  /**
+   * Reason of rejection.
+   */
+  value: any;
 }
 
 /**
  * Declare a Brer's function.
- *
- * @param handler The Function's handler.
- * @param callback Optional callback when the Function ends.
+ * The returned `Promise` will never reject.
  */
-export default function brer(
-  handler: Handler,
-  callback?: (err: any, result: any) => void
-): void;
+export default function brer(handler: Handler): Promise<Result>;

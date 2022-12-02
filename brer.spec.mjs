@@ -4,38 +4,49 @@ import nock from 'nock'
 import brer from './brer.mjs'
 
 test('brer', async t => {
-  const scope = nock('http://brer')
+  const rejection = await brer(null)
+  t.is(rejection.status, 'rejected')
+  t.true(rejection.reason instanceof TypeError)
+
+  const invocationId = '00000000-0000-0000-0000-000000000000' // See ava env
+  const scope = nock('https://fake.brer.io')
 
   scope
-    .post('/_api/v1/download', {})
-    .reply(
-      200,
-      { hello: 'world' },
-      {
-        'content-type': 'application/json',
-        'x-brer-function-name': 'my_function',
-        'x-brer-invocation-id': 'my_invocation'
+    .patch(`/api/v1/invocations/${invocationId}`, { status: 'running' })
+    .reply(200, {
+      invocation: {
+        _id: invocationId,
+        functionName: 'my_function'
       }
-    )
+    })
 
-  await new Promise((resolve, reject) => {
-    brer(
-      async (payload, ctx) => {
-        t.deepEqual(
-          JSON.parse(payload.toString()),
-          { hello: 'world' }
-        )
-        // TODO: somehow Got.js doesn't parse any header with Nock
-        // t.is(ctx.functionName, 'my_function')
-        // t.is(ctx.invocationId, 'my_invocation')
-      },
-      (err, result) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(result)
-        }
-      }
+  scope
+    .get(`/api/v1/invocations/${invocationId}/payload`)
+    .reply(200, { hello: 'world' })
+
+  scope
+    .patch(`/api/v1/invocations/${invocationId}`, {
+      status: 'completed',
+      result: 42
+    })
+    .reply(200, {})
+
+  const result = await brer(async (payload, ctx) => {
+    t.deepEqual(
+      JSON.parse(payload.toString()),
+      { hello: 'world' }
     )
+    t.like(ctx, {
+      invocation: {
+        _id: invocationId,
+        functionName: 'my_function'
+      }
+    })
+    return 42
+  })
+
+  t.deepEqual(result, {
+    status: 'fulfilled',
+    value: 42
   })
 })
