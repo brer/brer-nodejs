@@ -1,6 +1,6 @@
 {
   "name": "brer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Brer bindings for Node.js",
   "type": "module",
   "main": "./brer.cjs",
