@@ -3,16 +3,27 @@ import { debug } from 'node:util'
 const log = debug('brer')
 
 export default function brer (handler) {
-  return run(handler).then(
+  const promise = run(handler).then(
     result => {
       gracefulShutdown(0)
-      return result
+      return result.status === 'fulfilled'
+        ? result.value
+        : Promise.reject(result.reason)
     },
-    reason => {
+    err => {
       gracefulShutdown(1)
-      return { status: 'rejected', reason }
+      return Promise.reject(err)
     }
   )
+
+  // Break Promise chain (avoid Node.js UnhandledError)
+  promise.catch(noop)
+
+  return promise
+}
+
+function noop () {
+  // Nothing to do
 }
 
 function gracefulShutdown (code) {
@@ -30,7 +41,7 @@ function gracefulShutdown (code) {
       console.log('This function left some running code after its ending.')
       process.exit(code)
     },
-    10000
+    60000 // TODO: options?
   )
 
   // Let Node.js die :)
@@ -42,28 +53,22 @@ async function run (handler) {
     throw new TypeError('Expected handler function')
   }
 
-  const invocationId = process.env.BRER_INVOCATION_ID
-  if (!invocationId) {
-    throw new Error('Detected a Brer invocation outside its context')
-  }
-
   log('import got')
   const got = await createClient()
 
   log('fetch invocation')
   const { invocation } = await got({
-    method: 'PATCH',
-    url: `api/v1/invocations/${invocationId}`,
-    json: {
-      status: 'running'
-    },
+    method: 'POST',
+    url: 'rpc/v1/run',
+    json: {},
     resolveBodyOnly: true
   })
 
   log('fetch payload')
   const payload = await got({
-    method: 'GET',
-    url: `api/v1/invocations/${invocationId}/payload`,
+    method: 'POST',
+    url: 'rpc/v1/download',
+    json: {},
     responseType: 'buffer',
     resolveBodyOnly: false
   })
@@ -87,11 +92,11 @@ async function run (handler) {
   }
 
   log('close invocation')
+  const action = result.status === 'fulfilled' ? 'complete' : 'fail'
   await got({
-    method: 'PATCH',
-    url: `api/v1/invocations/${invocationId}`,
+    method: 'POST',
+    url: `rpc/v1/${action}`,
     json: {
-      status: result.status === 'fulfilled' ? 'completed' : 'failed',
       reason: serializeError(result.reason),
       result: result.value
     }
@@ -120,6 +125,10 @@ function serializeError (err) {
 }
 
 async function createClient () {
+  if (!process.env.BRER_TOKEN) {
+    throw new Error('Detected a Brer invocation outside its context')
+  }
+
   // Use dynamic import to support "old" CommonJS runtimes (Got.js is pure ESM)
   const { default: got } = await import('got')
 

@@ -3,7 +3,7 @@
 /**
  * Function handler for this project.
  */
-export type Handler = (payload: Buffer, context: Context) => any;
+export type Handler<T> = (payload: Buffer, context: Context) => T;
 
 export interface Context {
   /**
@@ -32,25 +32,7 @@ export interface Invocation {
 }
 
 /**
- * Just like `Promise.allSettled` output.
- */
-export interface Result {
-  /**
-   * Promise result status.
-   */
-  status: "fulfilled" | "rejected";
-  /**
-   * Fulfillment value.
-   */
-  reason: any;
-  /**
-   * Reason of rejection.
-   */
-  value: any;
-}
-
-/**
  * Declare a Brer's function.
  * The returned `Promise` will never reject.
  */
-export default function brer(handler: Handler): Promise<Result>;
+export default function brer<T>(handler: Handler<T>): Promise<Awaited<T>>;

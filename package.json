@@ -28,6 +28,13 @@
   ],
   "author": "Giacomo Gregoletto",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brer/brer-nodejs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/brer/brer-nodejs/issues"
+  },
   "dependencies": {
     "got": "^12.5.3"
   },
