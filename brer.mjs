@@ -1,3 +1,4 @@
+import got from 'got'
 import { debug } from 'node:util'
 
 const log = debug('brer')
@@ -128,9 +129,6 @@ async function createClient () {
   if (!process.env.BRER_TOKEN) {
     throw new Error('Detected a Brer invocation outside its context')
   }
-
-  // Use dynamic import to support "old" CommonJS runtimes (Got.js is pure ESM)
-  const { default: got } = await import('got')
 
   return got.extend({
     prefixUrl: process.env.BRER_URL || 'http://127.0.0.1:3000',
