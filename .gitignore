@@ -1,7 +1,6 @@
 .*
 !.c8rc
 !.gitignore
-brer.cjs
 coverage
 node_modules
 package-lock.json

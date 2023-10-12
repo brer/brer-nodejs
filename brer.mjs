@@ -1,10 +1,17 @@
 import got from 'got'
 import { debug } from 'node:util'
+import { Worker, isMainThread } from 'node:worker_threads'
+
+import { createLogCollector } from './lib/log.mjs'
 
 const log = debug('brer')
 
 export default function brer (handler) {
-  const promise = run(handler).then(
+  let promise = isMainThread && process.env.BRER_WORKER !== 'disable'
+    ? forkJob()
+    : runJob(handler)
+
+  promise = promise.then(
     result => {
       gracefulShutdown(0)
       return result.status === 'fulfilled'
@@ -23,12 +30,60 @@ export default function brer (handler) {
   return promise
 }
 
+function forkJob () {
+  return new Promise((resolve, reject) => {
+    const unhandledCollect = createLogCollector(createClient())
+
+    const collect = data => unhandledCollect(data)
+      .catch(err => log('log collection error', err))
+
+    const worker = new Worker(
+      process.env.BRER_WORKER || process.argv[1],
+      {
+        stderr: true,
+        stdin: true,
+        stdout: true
+      }
+    )
+
+    worker.stdout.on('data', collect)
+    worker.stderr.on('data', collect)
+
+    const done = (err, value) => collect().then(() => {
+      if (err) {
+        resolve({
+          status: 'rejected',
+          reason: err
+        })
+      } else {
+        resolve({
+          status: 'fulfilled',
+          value
+        })
+      }
+    })
+
+    // Raw errors should never occur (reject instantly)
+    worker.on('error', reject)
+
+    worker.on('exit', code => {
+      log(`worker exited with code ${code}`)
+
+      if (code === 0) {
+        done(null)
+      } else {
+        done(new Error(`Worker exited with code ${code}`))
+      }
+    })
+  })
+}
+
 function noop () {
   // Nothing to do
 }
 
 function gracefulShutdown (code) {
-  if (process.env.NODE_ENV === 'test') {
+  if (process.env.BRER_WORKER === 'disable') {
     // Ignore process exit during tests
     return
   }
@@ -38,27 +93,43 @@ function gracefulShutdown (code) {
 
   const timer = setTimeout(
     () => {
-      console.log('Exit timeout reached.')
-      console.log('This function left some running code after its ending.')
+      console.error('Exit timeout reached.')
+      console.error('This function left some running code after its ending.')
       process.exit(code)
     },
-    60000 // TODO: options?
+    60000
   )
 
   // Let Node.js die :)
   timer.unref()
 }
 
-async function run (handler) {
+function createClient () {
+  if (!process.env.BRER_TOKEN) {
+    throw new Error('Detected a Brer invocation outside its context')
+  }
+
+  return got.extend({
+    prefixUrl: process.env.BRER_URL || 'http://127.0.0.1:3000',
+    headers: {
+      authorization: `Bearer ${process.env.BRER_TOKEN}`
+    },
+    responseType: 'json',
+    retry: {
+      limit: 2
+    }
+  })
+}
+
+async function runJob (handler) {
   if (typeof handler !== 'function') {
     throw new TypeError('Expected handler function')
   }
 
-  log('import got')
-  const got = await createClient()
+  const client = createClient()
 
   log('fetch invocation')
-  const { invocation } = await got({
+  const { invocation } = await client({
     method: 'POST',
     url: 'rpc/v1/run',
     json: {},
@@ -66,7 +137,7 @@ async function run (handler) {
   })
 
   log('fetch payload')
-  const payload = await got({
+  const payload = await client({
     method: 'POST',
     url: 'rpc/v1/download',
     json: {},
@@ -94,7 +165,7 @@ async function run (handler) {
 
   log('close invocation')
   const action = result.status === 'fulfilled' ? 'complete' : 'fail'
-  await got({
+  await client({
     method: 'POST',
     url: `rpc/v1/${action}`,
     json: {
@@ -123,21 +194,4 @@ function serializeError (err) {
     }
   }
   return result
-}
-
-async function createClient () {
-  if (!process.env.BRER_TOKEN) {
-    throw new Error('Detected a Brer invocation outside its context')
-  }
-
-  return got.extend({
-    prefixUrl: process.env.BRER_URL || 'http://127.0.0.1:3000',
-    headers: {
-      authorization: `Bearer ${process.env.BRER_TOKEN}`
-    },
-    responseType: 'json',
-    retry: {
-      limit: 2
-    }
-  })
 }

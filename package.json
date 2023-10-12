@@ -6,12 +6,11 @@
   "exports": {
     ".": {
       "import": "./brer.mjs",
-      "require": "./brer.cjs",
       "types": "./brer.d.ts"
     }
   },
   "files": [
-    "brer.cjs",
+    "lib",
     "brer.d.ts",
     "brer.mjs"
   ],
