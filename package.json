@@ -11,8 +11,8 @@
   },
   "files": [
     "lib",
-    "brer.d.ts",
-    "brer.mjs"
+    "brer.mjs",
+    "brer.d.ts"
   ],
   "scripts": {
     "lint": "standard",
@@ -32,12 +32,11 @@
     "url": "https://github.com/brer/brer-nodejs/issues"
   },
   "dependencies": {
-    "got": "^13.0.0"
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "ava": "^5.3.1",
     "c8": "^8.0.1",
-    "nock": "^13.3.4",
     "standard": "^17.1.0"
   }
 }

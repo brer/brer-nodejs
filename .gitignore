@@ -1,6 +1,7 @@
 .*
 !.c8rc
 !.gitignore
+*.tgz
 coverage
 node_modules
 package-lock.json

@@ -3,9 +3,9 @@
 /**
  * Function handler for this project.
  */
-export type Handler<T> = (payload: Buffer, context: Context) => T;
+export type BrerHandler = (payload: Buffer, context: BrerContext) => any;
 
-export interface Context {
+export interface BrerContext {
   /**
    * Payload's content type.
    */
@@ -13,10 +13,10 @@ export interface Context {
   /**
    * The Invoication's identifier that was created by the Function.
    */
-  invocation: Invocation;
+  invocation: BrerInvocation;
 }
 
-export interface Invocation {
+export interface BrerInvocation {
   /**
    * Invocation identifier.
    */
@@ -25,6 +25,14 @@ export interface Invocation {
    * Name of the invoking function.
    */
   functionName: string;
+  /**
+   * Configured env variables.
+   */
+  env: {
+    name: string;
+    value?: string;
+    secretKey?: string;
+  }[];
   /**
    * TODO: other fields
    */
@@ -35,4 +43,4 @@ export interface Invocation {
  * Declare a Brer's function.
  * The returned `Promise` will never reject.
  */
-export default function brer<T>(handler: Handler<T>): Promise<Awaited<T>>;
+export default function brer(handler: BrerHandler): void;

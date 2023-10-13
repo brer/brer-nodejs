@@ -2,6 +2,7 @@
   "all": true,
   "reporter": ["html", "lcov", "text"],
   "include": [
+    "lib/**/*.mjs",
     "brer.mjs"
   ],
   "exclude": [
