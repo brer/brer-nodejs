@@ -1,35 +1,59 @@
 import { debug } from 'node:util'
+import { isMainThread, parentPort, workerData } from 'node:worker_threads'
+
+import { runChildThread } from './lib/child_thread.mjs'
+import { createHttpClient } from './lib/client.mjs'
+import { runMainThread, serializeError } from './lib/main_thread.mjs'
 
 const log = debug('brer')
 
 export default function brer (handler) {
-  const promise = run(handler).then(
-    result => {
-      gracefulShutdown(0)
-      return result.status === 'fulfilled'
-        ? result.value
-        : Promise.reject(result.reason)
+  if (typeof handler !== 'function') {
+    throw new TypeError('Expected handler function')
+  }
+
+  const token = process.env.BRER_TOKEN
+  if (!token) {
+    throw new Error('Detected a Brer invocation outside its context')
+  }
+
+  const request = createHttpClient(log, token)
+
+  const promise = isMainThread
+    ? runMainThread(log, request, process.argv[1])
+    : runChildThread(log, request, workerData, handler)
+      .then(value => {
+        log('task completed', value)
+        return {
+          status: 'fulfilled',
+          value
+        }
+      })
+      .catch(err => {
+        log('task failed', err)
+        return {
+          status: 'rejected',
+          reason: serializeError(err)
+        }
+      })
+      .then(result => parentPort.postMessage(result))
+
+  promise.then(
+    value => {
+      log('all done', value)
+      shutdown(0)
     },
     err => {
-      gracefulShutdown(1)
-      return Promise.reject(err)
+      console.error('unhandled exception', err)
+      shutdown(1)
     }
   )
-
-  // Break Promise chain (avoid Node.js UnhandledError)
-  promise.catch(noop)
-
-  return promise
 }
 
-function noop () {
-  // Nothing to do
-}
-
-function gracefulShutdown (code) {
-  if (process.env.NODE_ENV === 'test') {
-    // Ignore process exit during tests
-    return
+function shutdown (code) {
+  if (isMainThread) {
+    // Main thread can skip the waiting time
+    process.exit(code)
   }
 
   // Set the resulting exit code if Node.js terminates before timeout
@@ -37,109 +61,13 @@ function gracefulShutdown (code) {
 
   const timer = setTimeout(
     () => {
-      console.log('Exit timeout reached.')
-      console.log('This function left some running code after its ending.')
+      console.error('Exit timeout reached.')
+      console.error('This function left some running code after its ending.')
       process.exit(code)
     },
-    60000 // TODO: options?
+    60000
   )
 
   // Let Node.js die :)
   timer.unref()
-}
-
-async function run (handler) {
-  if (typeof handler !== 'function') {
-    throw new TypeError('Expected handler function')
-  }
-
-  log('import got')
-  const got = await createClient()
-
-  log('fetch invocation')
-  const { invocation } = await got({
-    method: 'POST',
-    url: 'rpc/v1/run',
-    json: {},
-    resolveBodyOnly: true
-  })
-
-  log('fetch payload')
-  const payload = await got({
-    method: 'POST',
-    url: 'rpc/v1/download',
-    json: {},
-    responseType: 'buffer',
-    resolveBodyOnly: false
-  })
-
-  const ctx = {
-    contentType: payload.headers['content-type'],
-    invocation
-  }
-
-  const result = { status: 'unknown' }
-
-  log('run task handler')
-  try {
-    result.value = await handler(payload.body, ctx)
-    result.status = 'fulfilled'
-    log('task completed')
-  } catch (err) {
-    result.reason = err
-    result.status = 'rejected'
-    log('task failed')
-  }
-
-  log('close invocation')
-  const action = result.status === 'fulfilled' ? 'complete' : 'fail'
-  await got({
-    method: 'POST',
-    url: `rpc/v1/${action}`,
-    json: {
-      reason: serializeError(result.reason),
-      result: result.value
-    }
-  })
-
-  return result
-}
-
-function serializeError (err) {
-  if (!(err instanceof Error) || typeof Object(err).toJSON === 'function') {
-    return err
-  }
-  const result = {
-    type: err.constructor.name,
-    code: err.code,
-    message: err.message,
-    stack: err.stack
-  }
-  const usedKeys = Object.keys(result)
-  for (const key of Object.keys(err)) {
-    if (!usedKeys.includes(key)) {
-      result[key] = err[key]
-    }
-  }
-  return result
-}
-
-async function createClient () {
-  if (!process.env.BRER_TOKEN) {
-    throw new Error('Detected a Brer invocation outside its context')
-  }
-
-  // Use dynamic import to support "old" CommonJS runtimes (Got.js is pure ESM)
-  const { default: got } = await import('got')
-
-  return got.extend({
-    prefixUrl: process.env.BRER_URL || 'http://127.0.0.1:3000',
-    headers: {
-      authorization: `Bearer ${process.env.BRER_TOKEN}`
-    },
-    responseType: 'json',
-    retry: {
-      limit: 2
-    }
-  })
 }

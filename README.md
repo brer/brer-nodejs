@@ -5,6 +5,8 @@
 
 This is the Node.js package for Brer Function declaration.
 
+> **WARNING:** This package is pure ESM. Use `const brer = await import('brer')` if you need It within a CommonJS environment.
+
 ```javascript
 import brer from 'brer'
 
@@ -19,11 +21,5 @@ async function myTask (payload, ctx) {
 }
 
 // Run
-const promise = brer(myTask)
-
-// This Promise is safe, you can skip ".catch()"
-promise.then(result => {
-  console.log(result) // 42
-  // TODO: do something after the function invocation
-})
+brer(myTask)
 ```
