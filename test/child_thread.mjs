@@ -104,8 +104,8 @@ test('test run', async t => {
 
   const result = await runChildThread(log, request, invocation, handler)
   t.like(result, {
-    runtime: 'Node.js',
-    node: {
+    runtime: {
+      type: 'Node.js',
       arch: process.arch,
       platform: process.platform,
       version: process.version
