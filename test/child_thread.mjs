@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { runChildThread } from '../lib/child_thread.mjs'
+import { getFunctionHandler, runChildThread } from '../lib/child_thread.mjs'
 import { mockHttpClient } from './_client.mjs'
 
 const log = () => {}
@@ -111,4 +111,11 @@ test('test run', async t => {
       version: process.version
     }
   })
+})
+
+test('handler resolution', t => {
+  t.truthy(getFunctionHandler(() => {}))
+  t.truthy(getFunctionHandler({ _: () => {} }))
+  t.truthy(getFunctionHandler({ test: () => {} }, 'test'))
+  t.throws(() => getFunctionHandler({}, 'test'))
 })
