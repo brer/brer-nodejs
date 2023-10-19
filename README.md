@@ -15,7 +15,7 @@ async function myTask (payload, ctx) {
   console.log('Invocation id: ' + ctx.invocation._id)
 
   console.log('Payload type: ' + ctx.contentType)
-  // TODO: do something useful with the payload (Buffer)
+  // do something useful with the payload (Buffer)
 
   return 42
 }

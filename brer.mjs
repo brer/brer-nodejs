@@ -7,7 +7,6 @@ import { runMainThread, serializeError } from './lib/main_thread.mjs'
 
 const log = debug('brer')
 
-// TODO: support handler+functionName
 export default function brer (handler) {
   const token = process.env.BRER_TOKEN
   if (!token) {
