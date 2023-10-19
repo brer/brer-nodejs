@@ -2,7 +2,7 @@ import test from 'ava'
 import { resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { runMainThread } from '../lib/main_thread.mjs'
+import { runMainThread, serializeError } from '../lib/main_thread.mjs'
 import { mockHttpClient } from './_client.mjs'
 
 const log = () => {}
@@ -215,4 +215,16 @@ test('logs collection', async t => {
     status: 'fulfilled',
     value: 'check logs'
   })
+})
+
+test('serializeError', t => {
+  t.plan(1)
+
+  t.like(
+    serializeError(new Error('Test')),
+    {
+      type: 'Error',
+      message: 'Test'
+    }
+  )
 })

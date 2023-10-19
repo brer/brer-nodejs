@@ -7,12 +7,7 @@ import { runMainThread, serializeError } from './lib/main_thread.mjs'
 
 const log = debug('brer')
 
-// TODO: support handler+functionName
 export default function brer (handler) {
-  if (typeof handler !== 'function') {
-    throw new TypeError('Expected handler function')
-  }
-
   const token = process.env.BRER_TOKEN
   if (!token) {
     throw new Error('Detected a Brer invocation outside its context')

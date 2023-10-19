@@ -40,7 +40,12 @@ export interface BrerInvocation {
 }
 
 /**
- * Declare a Brer's function.
- * The returned `Promise` will never reject.
+ * Keys are Functions' name.
+ * Key `_` is the fallback.
  */
-export default function brer(handler: BrerHandler): void;
+export type BrerHandlers = Record<string, BrerHandler>
+
+/**
+ * Configure Brer function(s) handler.
+ */
+export default function brer(handler: BrerHandler | BrerHandlers): void;
