@@ -15,6 +15,7 @@ if (workerData._id === 'fulfilled_result') {
     reason: 'oh no'
   })
 } else if (workerData._id === 'test_logs_collection') {
+  console.error('this should be private')
   console.log('cache invalidation')
 
   parentPort.postMessage({
@@ -23,8 +24,8 @@ if (workerData._id === 'fulfilled_result') {
   })
 
   setTimeout(() => {
-    // This log line should be collected
-    console.error('naming things')
+    console.error('also this should be private')
+    console.log('naming things')
   }, 500)
 } else if (workerData._id !== 'clean_exit') {
   throw new Error(`Unknown command ${workerData._id}`)
