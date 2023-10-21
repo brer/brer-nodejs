@@ -3,21 +3,30 @@ import { isMainThread, parentPort, workerData } from 'node:worker_threads'
 
 import { runChildThread } from './lib/child_thread.mjs'
 import { createHttpClient } from './lib/client.mjs'
+import {
+  mergeHandlers,
+  registerGlobalHandler,
+  registerHandler
+} from './lib/handlers.mjs'
 import { runMainThread, serializeError } from './lib/main_thread.mjs'
 
+const handlers = {}
 const log = debug('brer')
 
-export default function brer (handler) {
+export default function brer (oneOrMore) {
   const token = process.env.BRER_TOKEN
   if (!token) {
-    throw new Error('Detected a Brer invocation outside its context')
+    return false
+  }
+  if (oneOrMore !== undefined) {
+    register(oneOrMore)
   }
 
   const request = createHttpClient(log, token)
 
   const promise = isMainThread
     ? runMainThread(log, request, process.argv[1])
-    : runChildThread(log, request, workerData, handler)
+    : runChildThread(log, request, workerData, handlers)
       .then(value => {
         log('task completed', value)
         return {
@@ -44,6 +53,8 @@ export default function brer (handler) {
       shutdown(1)
     }
   )
+
+  return true
 }
 
 function shutdown (code) {
@@ -66,4 +77,16 @@ function shutdown (code) {
 
   // Let Node.js die :)
   timer.unref()
+}
+
+export function register (oneOrMany, fnHandler) {
+  if (typeof oneOrMany === 'string') {
+    registerHandler(handlers, oneOrMany, fnHandler)
+  } else if (typeof oneOrMany === 'function') {
+    registerGlobalHandler(handlers, oneOrMany)
+  } else if (typeof oneOrMany === 'object' && oneOrMany !== null) {
+    mergeHandlers(handlers, oneOrMany)
+  } else {
+    throw new TypeError('Unexpected value type')
+  }
 }

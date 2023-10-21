@@ -43,9 +43,24 @@ export interface BrerInvocation {
  * Keys are Functions' name.
  * Key `_` is the fallback.
  */
-export type BrerHandlers = Record<string, BrerHandler>
+export type BrerHandlers = Record<string, BrerHandler>;
 
 /**
- * Configure Brer function(s) handler.
+ * Register multiple handlers at the same time.
  */
-export default function brer(handler: BrerHandler | BrerHandlers): void;
+export function register(handlers: BrerHandlers): void;
+/**
+ * Register one global handler for all functions.
+ */
+export function register(handler: BrerHandler): void;
+/**
+ * Register one named handler for a single function.
+ */
+export function register(fnName: string, fnHandler: BrerHandler): void;
+
+/**
+ * Register optionally a set of named handlers or a global handler and then execute Brer runtime.
+ * Returns `true` when a Brer environment is detected and the execution was started.
+ * Returns `false` when is not possible to run any function. Can be use to add more "modes" to the project.
+ */
+export default function brer(handler?: BrerHandler | BrerHandlers): boolean;

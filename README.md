@@ -1,11 +1,9 @@
-# Brer bindings for Node.js
+# Official Node.js bindings for [Brer](https://github.com/brer/brer)
 
 [![npm](https://img.shields.io/npm/v/brer)](https://www.npmjs.com/package/brer)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
-This is the Node.js package for Brer Function declaration.
-
-> **WARNING:** This package is pure ESM. Use `const brer = await import('brer')` if you need It within a CommonJS environment.
+> **WARNING:** This package is pure ESM. Learn more aboud It [here](https://nodejs.org/api/esm.html).
 
 ```javascript
 import brer from 'brer'

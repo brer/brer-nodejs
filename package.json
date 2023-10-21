@@ -1,7 +1,7 @@
 {
   "name": "brer",
   "version": "0.5.0",
-  "description": "Brer bindings for Node.js",
+  "description": "Official Node.js bindings for Brer.",
   "type": "module",
   "exports": {
     ".": {
@@ -20,9 +20,12 @@
     "test": "c8 ava"
   },
   "keywords": [
-    "brer"
+    "brer",
+    "serverless",
+    "job",
+    "task"
   ],
-  "author": "Giacomo Gregoletto",
+  "author": "Giacomo Gregoletto <giacomo.gregoletto@evologi.it>",
   "license": "MIT",
   "repository": {
     "type": "git",

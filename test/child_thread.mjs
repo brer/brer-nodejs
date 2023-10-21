@@ -1,9 +1,16 @@
 import test from 'ava'
 
-import { getFunctionHandler, runChildThread } from '../lib/child_thread.mjs'
+import { runChildThread } from '../lib/child_thread.mjs'
+import { registerGlobalHandler } from '../lib/handlers.mjs'
 import { mockHttpClient } from './_client.mjs'
 
 const log = () => {}
+
+function wrap (fn) {
+  const handlers = {}
+  registerGlobalHandler(handlers, fn)
+  return handlers
+}
 
 test('happy path', async t => {
   t.plan(4)
@@ -38,7 +45,7 @@ test('happy path', async t => {
     return 42
   }
 
-  const result = await runChildThread(log, request, invocation, handler)
+  const result = await runChildThread(log, request, invocation, wrap(handler))
   t.is(result, 42)
 })
 
@@ -76,7 +83,7 @@ test('rejection', async t => {
   }
 
   await t.throwsAsync(
-    () => runChildThread(log, request, invocation, handler),
+    () => runChildThread(log, request, invocation, wrap(handler)),
     { message: 'Cockroaches' }
   )
 })
@@ -102,7 +109,7 @@ test('test run', async t => {
     throw new Error('Stop')
   }
 
-  const result = await runChildThread(log, request, invocation, handler)
+  const result = await runChildThread(log, request, invocation, wrap(handler))
   t.like(result, {
     runtime: {
       type: 'Node.js',
@@ -111,11 +118,4 @@ test('test run', async t => {
       version: process.version
     }
   })
-})
-
-test('handler resolution', t => {
-  t.truthy(getFunctionHandler(() => {}))
-  t.truthy(getFunctionHandler({ _: () => {} }))
-  t.truthy(getFunctionHandler({ test: () => {} }, 'test'))
-  t.throws(() => getFunctionHandler({}, 'test'))
 })
