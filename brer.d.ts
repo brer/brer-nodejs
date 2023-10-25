@@ -31,6 +31,7 @@ export interface BrerInvocation {
   env: {
     name: string;
     value?: string;
+    secretName?: string;
     secretKey?: string;
   }[];
   /**

@@ -18,8 +18,8 @@ test('log full page and final partial', async t => {
   t.plan(6)
 
   let i = 0
-  const request = (path, options) => {
-    t.is(path, 'rpc/v1/log')
+  const request = options => {
+    t.like(options, { path: 'rpc/v1/log' })
     t.true(Buffer.isBuffer(options.body))
     if (i === 0) {
       t.is(options.body.byteLength, 128)

@@ -16,14 +16,14 @@ test('handlers registration', t => {
 
   registerHandler(obj, 'test', noop)
   t.is(getHandler(obj, 'test'), noop)
-  t.throws(() => getHandler(obj, 'nope'))
+  t.is(getHandler(obj, 'nope'), null)
 
   mergeHandlers(obj, { prop: noop })
   t.is(getHandler(obj, 'prop'), noop)
   t.throws(() => mergeHandlers(obj, { test: noop }))
   t.throws(() => mergeHandlers(obj, { ohno: null }))
 
-  t.throws(() => getHandler(obj, 'global'))
+  t.is(getHandler(obj, 'global'), null)
   registerGlobalHandler(obj, noop)
   t.is(getHandler(obj, 'haha'), noop)
   t.throws(() => mergeHandlers(obj, { _: noop }))

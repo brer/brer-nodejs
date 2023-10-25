@@ -1,12 +1,15 @@
 export function mockHttpClient (...fns) {
   let i = 0
-  return async (path, options = {}) => {
+  return async options => {
     const fn = fns[i++]
     if (!fn) {
       throw new Error(`Request #${i} was not mocked`)
     }
 
-    const { body, headers } = fn(path, options) || {}
+    if (typeof options === 'string') {
+      options = { path: options }
+    }
+    const { body, headers } = fn(options) || {}
 
     const contentType = Buffer.isBuffer(body)
       ? 'application/octet-stream'

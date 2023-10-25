@@ -1,14 +1,14 @@
 import { debug } from 'node:util'
-import { isMainThread, parentPort, workerData } from 'node:worker_threads'
 
-import { runChildThread } from './lib/child_thread.mjs'
 import { createHttpClient } from './lib/client.mjs'
 import {
   mergeHandlers,
   registerGlobalHandler,
   registerHandler
 } from './lib/handlers.mjs'
-import { runMainThread, serializeError } from './lib/main_thread.mjs'
+import { executeRuntime } from './lib/runtime.mjs'
+import { handleInvocation } from './lib/worker.mjs'
+import { asRejected, serializeResult } from './lib/util.mjs'
 
 const handlers = {}
 const log = debug('brer')
@@ -24,32 +24,21 @@ export default function brer (oneOrMore) {
 
   const request = createHttpClient(log, token)
 
-  const promise = isMainThread
-    ? runMainThread(log, request, process.argv[1])
-    : runChildThread(log, request, workerData, handlers)
-      .then(value => {
-        log('task completed', value)
-        return {
-          status: 'fulfilled',
-          value
-        }
-      })
-      .catch(err => {
-        log('task failed', err)
-        return {
-          status: 'rejected',
-          reason: serializeError(err)
-        }
-      })
-      .then(result => parentPort.postMessage(result))
+  const promise = !process.send
+    ? executeRuntime(log, request)
+    : handleInvocation(log, request, handlers)
+      .catch(err => asRejected(err))
+      .then(obj => process.send(serializeResult(obj)))
 
   promise.then(
-    value => {
-      log('all done', value)
+    () => {
+      log('all done')
       shutdown(0)
     },
     err => {
-      console.error('unhandled exception', err)
+      // This is a bad error (Brer is offline or other stranger things)
+      console.error('Brer runtime failure')
+      console.error(err)
       shutdown(1)
     }
   )
@@ -58,11 +47,6 @@ export default function brer (oneOrMore) {
 }
 
 function shutdown (code) {
-  if (isMainThread) {
-    // Main thread can skip the waiting time
-    process.exit(code)
-  }
-
   // Set the resulting exit code if Node.js terminates before timeout
   process.exitCode = code
 
@@ -72,7 +56,7 @@ function shutdown (code) {
       console.error('This function left some running code after its ending.')
       process.exit(code)
     },
-    60000
+    10000
   )
 
   // Let Node.js die :)
