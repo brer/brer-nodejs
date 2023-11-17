@@ -156,3 +156,50 @@ test('test mode', async t => {
     }
   })
 })
+
+test('progress update', async t => {
+  t.plan(4)
+
+  const request = mockHttpClient(
+    options => {
+      t.like(options, {
+        path: 'rpc/v1/run'
+      })
+      return {
+        body: {
+          invocation: {
+            _id: 'progress'
+          }
+        }
+      }
+    },
+    options => {
+      t.like(options, {
+        path: 'rpc/v1/download'
+      })
+    },
+    options => {
+      t.like(options, {
+        path: 'rpc/v1/progress',
+        body: {
+          result: 4
+        }
+      })
+    },
+    options => {
+      t.like(options, {
+        path: 'rpc/v1/progress',
+        body: {
+          result: 2
+        }
+      })
+    }
+  )
+
+  const handler = async (payload, ctx) => {
+    await ctx.progress(4)
+    await ctx.progress(2)
+  }
+
+  await handleInvocation(log, request, wrap(handler))
+})

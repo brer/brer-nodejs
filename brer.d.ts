@@ -14,6 +14,11 @@ export interface BrerContext {
    * The Invoication's identifier that was created by the Function.
    */
   invocation: BrerInvocation;
+  /**
+   * Send Invocation progress update.
+   * Rejections need to be handled.
+   */
+  progress: (result: unknown) => Promise<void>;
 }
 
 export interface BrerInvocation {
@@ -22,9 +27,21 @@ export interface BrerInvocation {
    */
   _id: string;
   /**
+   * Function's Project.
+   */
+  project: string;
+  /**
    * Name of the invoking function.
    */
   functionName: string;
+  /**
+   * Current container image.
+   */
+  image: {
+    host: string;
+    name: string;
+    tag: string;
+  };
   /**
    * Configured env variables.
    */
@@ -33,6 +50,14 @@ export interface BrerInvocation {
     value?: string;
     secretName?: string;
     secretKey?: string;
+  }[];
+  /**
+   * List of Invocation status change.
+   */
+  phases: {
+    status: string;
+    date: string;
+    result?: any;
   }[];
   /**
    * TODO: other fields
