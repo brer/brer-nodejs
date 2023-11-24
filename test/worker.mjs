@@ -4,6 +4,7 @@ import { registerGlobalHandler } from '../lib/handlers.mjs'
 import { handleInvocation } from '../lib/worker.mjs'
 import { mockHttpClient } from './_client.mjs'
 
+const invocationId = 'test-worker'
 const log = () => {}
 const wrap = fn => {
   const handlers = {}
@@ -17,7 +18,7 @@ test('ok handler', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -29,7 +30,7 @@ test('ok handler', async t => {
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/download'
+        path: `invoker/v1/invocations/${invocationId}/payload`
       })
     }
   )
@@ -43,7 +44,10 @@ test('ok handler', async t => {
     return 42
   }
 
-  const result = await handleInvocation(log, request, wrap(handler))
+  const result = await handleInvocation(
+    { invocationId, log, request },
+    wrap(handler)
+  )
   t.like(result, {
     status: 'fulfilled',
     value: 42
@@ -56,7 +60,7 @@ test('ko handler', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -68,7 +72,7 @@ test('ko handler', async t => {
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/download'
+        path: `invoker/v1/invocations/${invocationId}/payload`
       })
     }
   )
@@ -82,7 +86,10 @@ test('ko handler', async t => {
     return Promise.reject(new Error('Kaboom!'))
   }
 
-  const result = await handleInvocation(log, request, wrap(handler))
+  const result = await handleInvocation(
+    { invocationId, log, request },
+    wrap(handler)
+  )
   t.like(result, {
     status: 'rejected',
     reason: {
@@ -97,7 +104,7 @@ test('no handler', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -110,7 +117,10 @@ test('no handler', async t => {
     }
   )
 
-  const result = await handleInvocation(log, request, {})
+  const result = await handleInvocation(
+    { invocationId, log, request },
+    {}
+  )
   t.like(result, {
     status: 'rejected',
     reason: 'handler for oopsie function not found'
@@ -123,7 +133,7 @@ test('test mode', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -146,7 +156,10 @@ test('test mode', async t => {
     return Promise.reject(new Error())
   }
 
-  const result = await handleInvocation(log, request, wrap(handler))
+  const result = await handleInvocation(
+    { invocationId, log, request },
+    wrap(handler)
+  )
   t.like(result, {
     status: 'fulfilled',
     value: {
@@ -163,7 +176,7 @@ test('progress update', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -175,12 +188,12 @@ test('progress update', async t => {
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/download'
+        path: `invoker/v1/invocations/${invocationId}/payload`
       })
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/progress',
+        path: `invoker/v1/invocations/${invocationId}/status/progress`,
         body: {
           result: 4
         }
@@ -188,7 +201,7 @@ test('progress update', async t => {
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/progress',
+        path: `invoker/v1/invocations/${invocationId}/status/progress`,
         body: {
           result: 2
         }
@@ -201,5 +214,8 @@ test('progress update', async t => {
     await ctx.progress(2)
   }
 
-  await handleInvocation(log, request, wrap(handler))
+  await handleInvocation(
+    { invocationId, log, request },
+    wrap(handler)
+  )
 })

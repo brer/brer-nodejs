@@ -8,27 +8,32 @@ import {
 } from './lib/handlers.mjs'
 import { executeRuntime } from './lib/runtime.mjs'
 import { handleInvocation } from './lib/worker.mjs'
-import { asRejected, serializeResult } from './lib/util.mjs'
+import { asRejected, serializeError } from './lib/util.mjs'
 
 const handlers = {}
 const log = debug('brer')
 
 export default function brer (oneOrMore) {
+  const invocationId = process.env.BRER_INVOCATION_ID
   const token = process.env.BRER_TOKEN
-  if (!token) {
+  if (!invocationId || !token) {
     return false
   }
   if (oneOrMore !== undefined) {
     register(oneOrMore)
   }
 
-  const request = createHttpClient(log, token)
+  const app = {
+    invocationId,
+    log,
+    request: createHttpClient(log, token)
+  }
 
   const promise = !process.send
-    ? executeRuntime(log, request)
-    : handleInvocation(log, request, handlers)
-      .catch(err => asRejected(err))
-      .then(obj => process.send(serializeResult(obj)))
+    ? executeRuntime(app)
+    : handleInvocation(app, handlers)
+      .catch(err => asRejected(serializeError(err)))
+      .then(obj => process.send(obj))
 
   promise.then(
     () => {

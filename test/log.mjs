@@ -1,6 +1,7 @@
 import test from 'ava'
 
 import { createLogCollector } from '../lib/log.mjs'
+import { mockHttpClient } from './_client.mjs'
 
 test('do not log partial pages', async t => {
   const request = () => {
@@ -8,30 +9,35 @@ test('do not log partial pages', async t => {
     return Promise.reject(new Error('Unexpected'))
   }
 
-  const collect = createLogCollector(request, 128)
+  const collect = createLogCollector(request, 'my-invocation', 128)
 
   await collect(Buffer.alloc(127))
   t.pass()
 })
 
 test('log full page and final partial', async t => {
-  t.plan(6)
+  t.plan(2)
 
-  let i = 0
-  const request = options => {
-    t.like(options, { path: 'rpc/v1/log' })
-    t.true(Buffer.isBuffer(options.body))
-    if (i === 0) {
-      t.is(options.body.byteLength, 128)
-    } else if (i === 1) {
-      t.is(options.body.byteLength, 42)
-    } else {
-      t.fail()
+  const request = mockHttpClient(
+    options => {
+      t.like(options, {
+        path: 'invoker/v1/invocations/my-invocation/log/0',
+        body: {
+          byteLength: 128
+        }
+      })
+    },
+    options => {
+      t.like(options, {
+        path: 'invoker/v1/invocations/my-invocation/log/1',
+        body: {
+          byteLength: 42
+        }
+      })
     }
-    i++
-  }
+  )
 
-  const collect = createLogCollector(request, 128)
+  const collect = createLogCollector(request, 'my-invocation', 128)
 
   await collect(Buffer.alloc(127))
   await collect(Buffer.alloc(43))

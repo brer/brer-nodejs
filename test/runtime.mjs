@@ -5,9 +5,14 @@ import { fileURLToPath } from 'node:url'
 import { executeRuntime } from '../lib/runtime.mjs'
 import { mockHttpClient } from './_client.mjs'
 
+const invocationId = 'test-runtime'
 const dummy = resolve(fileURLToPath(import.meta.url), '..', '_child.mjs')
 const log = () => {}
-const run = (request, env) => executeRuntime(log, request, dummy, env)
+const run = (request, env) => executeRuntime(
+  { log, request, invocationId },
+  dummy,
+  env
+)
 
 test('ok handler', async t => {
   t.plan(5)
@@ -15,7 +20,7 @@ test('ok handler', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -27,13 +32,13 @@ test('ok handler', async t => {
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/log'
+        path: `invoker/v1/invocations/${invocationId}/log/0`
       })
       t.is(options.body.toString('utf-8'), 'hello\nworld\n')
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/complete',
+        path: `invoker/v1/invocations/${invocationId}/status/completed`,
         body: {
           result: 42
         }
@@ -56,7 +61,7 @@ test('ko handler', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -68,13 +73,13 @@ test('ko handler', async t => {
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/log'
+        path: `invoker/v1/invocations/${invocationId}/log/0`
       })
       t.is(options.body.toString('utf-8'), 'oh\nno\n')
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/fail',
+        path: `invoker/v1/invocations/${invocationId}/status/failed`,
         body: {
           reason: {
             type: 'Error',
@@ -103,7 +108,7 @@ test('early worker termination', async t => {
   const request = mockHttpClient(
     options => {
       t.like(options, {
-        path: 'rpc/v1/run'
+        path: `invoker/v1/invocations/${invocationId}/status/running`
       })
       return {
         body: {
@@ -115,13 +120,13 @@ test('early worker termination', async t => {
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/log'
+        path: `invoker/v1/invocations/${invocationId}/log/0`
       })
       t.is(options.body.toString('utf-8'), 'moon\nmoon\n')
     },
     options => {
       t.like(options, {
-        path: 'rpc/v1/fail',
+        path: `invoker/v1/invocations/${invocationId}/status/failed`,
         body: {
           reason: 'early worker termination'
         }
