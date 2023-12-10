@@ -1,27 +1,21 @@
 export function mockHttpClient (...fns) {
   let i = 0
-  return async options => {
+  return async (path, options = {}) => {
     const fn = fns[i++]
     if (!fn) {
       throw new Error(`Request #${i} was not mocked`)
     }
 
-    if (typeof options === 'string') {
-      options = { path: options }
-    }
-    const { body, headers } = fn(options) || {}
-
-    const contentType = Buffer.isBuffer(body)
-      ? 'application/octet-stream'
-      : 'application/json'
+    const { body, headers } = fn(path, options) || {}
 
     return {
       headers: wrapHeaders({
-        'content-type': contentType,
+        'content-type': 'application/json',
         ...headers
       }),
-      body,
-      status: body === undefined ? 204 : 200
+      status: body === undefined ? 204 : 200,
+      arrayBuffer: () => Promise.resolve(Buffer.from(JSON.stringify(body))),
+      json: () => Promise.resolve(body)
     }
   }
 }

@@ -13,12 +13,15 @@ const wrap = fn => {
 }
 
 test('ok handler', async t => {
-  t.plan(4)
+  t.plan(5)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -28,10 +31,11 @@ test('ok handler', async t => {
         }
       }
     },
-    options => {
-      t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/payload`
-      })
+    path => {
+      t.is(path, `invoker/v1/invocations/${invocationId}/payload`)
+      return {
+        body: {}
+      }
     }
   )
 
@@ -55,12 +59,15 @@ test('ok handler', async t => {
 })
 
 test('ko handler', async t => {
-  t.plan(4)
+  t.plan(5)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -70,10 +77,11 @@ test('ko handler', async t => {
         }
       }
     },
-    options => {
-      t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/payload`
-      })
+    path => {
+      t.is(path, `invoker/v1/invocations/${invocationId}/payload`)
+      return {
+        body: {}
+      }
     }
   )
 
@@ -99,12 +107,16 @@ test('ko handler', async t => {
 })
 
 test('no handler', async t => {
-  t.plan(2)
+  t.plan(3)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        method: 'PUT',
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -128,12 +140,16 @@ test('no handler', async t => {
 })
 
 test('test mode', async t => {
-  t.plan(2)
+  t.plan(3)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        method: 'PUT',
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -171,12 +187,16 @@ test('test mode', async t => {
 })
 
 test('progress update', async t => {
-  t.plan(4)
+  t.plan(7)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        method: 'PUT',
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -186,23 +206,28 @@ test('progress update', async t => {
         }
       }
     },
-    options => {
-      t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/payload`
-      })
+    path => {
+      t.is(path, `invoker/v1/invocations/${invocationId}/payload`)
+      return {
+        body: {}
+      }
     },
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/progress`,
+        method: 'PUT',
         body: {
+          status: 'running',
           result: 4
         }
       })
     },
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/progress`,
+        method: 'PUT',
         body: {
+          status: 'running',
           result: 2
         }
       })

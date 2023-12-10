@@ -16,20 +16,20 @@ test('do not log partial pages', async t => {
 })
 
 test('log full page and final partial', async t => {
-  t.plan(2)
+  t.plan(4)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, 'invoker/v1/invocations/my-invocation/log/0')
       t.like(options, {
-        path: 'invoker/v1/invocations/my-invocation/log/0',
         body: {
           byteLength: 128
         }
       })
     },
-    options => {
+    (path, options) => {
+      t.is(path, 'invoker/v1/invocations/my-invocation/log/1')
       t.like(options, {
-        path: 'invoker/v1/invocations/my-invocation/log/1',
         body: {
           byteLength: 42
         }

@@ -15,12 +15,16 @@ const run = (request, env) => executeRuntime(
 )
 
 test('ok handler', async t => {
-  t.plan(5)
+  t.plan(7)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        method: 'PUT',
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -30,16 +34,16 @@ test('ok handler', async t => {
         }
       }
     },
-    options => {
-      t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/log/0`
-      })
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
       t.is(options.body.toString('utf-8'), 'hello\nworld\n')
     },
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/completed`,
+        method: 'PUT',
         body: {
+          status: 'completed',
           result: 42
         }
       })
@@ -56,12 +60,16 @@ test('ok handler', async t => {
 })
 
 test('ko handler', async t => {
-  t.plan(5)
+  t.plan(7)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        method: 'PUT',
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -71,16 +79,16 @@ test('ko handler', async t => {
         }
       }
     },
-    options => {
-      t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/log/0`
-      })
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
       t.is(options.body.toString('utf-8'), 'oh\nno\n')
     },
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/failed`,
+        method: 'PUT',
         body: {
+          status: 'failed',
           reason: {
             type: 'Error',
             message: 'Oh no'
@@ -103,12 +111,16 @@ test('ko handler', async t => {
 })
 
 test('early worker termination', async t => {
-  t.plan(5)
+  t.plan(7)
 
   const request = mockHttpClient(
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/running`
+        method: 'PUT',
+        body: {
+          status: 'running'
+        }
       })
       return {
         body: {
@@ -118,16 +130,15 @@ test('early worker termination', async t => {
         }
       }
     },
-    options => {
-      t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/log/0`
-      })
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
       t.is(options.body.toString('utf-8'), 'moon\nmoon\n')
     },
-    options => {
+    (path, options) => {
+      t.is(path, `invoker/v1/invocations/${invocationId}`)
       t.like(options, {
-        path: `invoker/v1/invocations/${invocationId}/status/failed`,
         body: {
+          status: 'failed',
           reason: 'early worker termination'
         }
       })
