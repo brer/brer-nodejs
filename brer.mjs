@@ -16,9 +16,11 @@ const log = debug('brer')
 export default function brer (oneOrMore) {
   const invocationId = process.env.BRER_INVOCATION_ID
   const token = process.env.BRER_TOKEN
-  if (!invocationId || !token) {
+  const url = process.env.BRER_URL
+  if (!invocationId || !token || !url) {
     return false
   }
+
   if (oneOrMore !== undefined) {
     register(oneOrMore)
   }
@@ -26,7 +28,7 @@ export default function brer (oneOrMore) {
   const app = {
     invocationId,
     log,
-    request: createHttpClient(log, token)
+    request: createHttpClient(url, token, log)
   }
 
   const promise = !process.send
