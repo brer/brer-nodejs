@@ -18,11 +18,7 @@ test('ok handler', async t => {
   const request = mockHttpClient(
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}`)
-      t.like(options, {
-        body: {
-          status: 'running'
-        }
-      })
+      t.like(options, { method: 'GET' })
       return {
         body: {
           invocation: {
@@ -64,11 +60,7 @@ test('ko handler', async t => {
   const request = mockHttpClient(
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}`)
-      t.like(options, {
-        body: {
-          status: 'running'
-        }
-      })
+      t.like(options, { method: 'GET' })
       return {
         body: {
           invocation: {
@@ -112,12 +104,7 @@ test('no handler', async t => {
   const request = mockHttpClient(
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}`)
-      t.like(options, {
-        method: 'PUT',
-        body: {
-          status: 'running'
-        }
-      })
+      t.like(options, { method: 'GET' })
       return {
         body: {
           invocation: {
@@ -145,12 +132,7 @@ test('test mode', async t => {
   const request = mockHttpClient(
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}`)
-      t.like(options, {
-        method: 'PUT',
-        body: {
-          status: 'running'
-        }
-      })
+      t.like(options, { method: 'GET' })
       return {
         body: {
           invocation: {
@@ -192,12 +174,7 @@ test('progress update', async t => {
   const request = mockHttpClient(
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}`)
-      t.like(options, {
-        method: 'PUT',
-        body: {
-          status: 'running'
-        }
-      })
+      t.like(options, { method: 'GET' })
       return {
         body: {
           invocation: {
