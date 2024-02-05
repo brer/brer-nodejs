@@ -15,7 +15,7 @@ const run = (request, env) => executeRuntime(
 )
 
 test('ok handler', async t => {
-  t.plan(7)
+  t.plan(8)
 
   const request = mockHttpClient(
     (path, options) => {
@@ -36,6 +36,9 @@ test('ok handler', async t => {
     },
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
+      t.like(options, {
+        method: 'PUT'
+      })
       t.is(options.body.toString('utf-8'), 'hello\nworld\n')
     },
     (path, options) => {
@@ -60,7 +63,7 @@ test('ok handler', async t => {
 })
 
 test('ko handler', async t => {
-  t.plan(7)
+  t.plan(8)
 
   const request = mockHttpClient(
     (path, options) => {
@@ -81,6 +84,9 @@ test('ko handler', async t => {
     },
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
+      t.like(options, {
+        method: 'PUT'
+      })
       t.is(options.body.toString('utf-8'), 'oh\nno\n')
     },
     (path, options) => {
@@ -111,7 +117,7 @@ test('ko handler', async t => {
 })
 
 test('early worker termination', async t => {
-  t.plan(7)
+  t.plan(8)
 
   const request = mockHttpClient(
     (path, options) => {
@@ -132,6 +138,9 @@ test('early worker termination', async t => {
     },
     (path, options) => {
       t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
+      t.like(options, {
+        method: 'PUT'
+      })
       t.is(options.body.toString('utf-8'), 'moon\nmoon\n')
     },
     (path, options) => {
