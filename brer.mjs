@@ -34,8 +34,8 @@ export default function brer (oneOrMore) {
   const promise = !process.send
     ? executeRuntime(app)
     : handleInvocation(app, handlers)
-      .catch(err => asRejected(serializeError(err)))
-      .then(obj => process.send(obj))
+      .catch(err => asRejected(err))
+      .then(obj => process.send(serializeReason(obj)))
 
   promise.then(
     () => {
@@ -51,6 +51,12 @@ export default function brer (oneOrMore) {
   )
 
   return true
+}
+
+function serializeReason (obj) {
+  return obj.status === 'rejected'
+    ? { ...obj, reason: serializeError(obj.reason) }
+    : obj
 }
 
 function shutdown (code) {
