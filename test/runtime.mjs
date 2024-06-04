@@ -19,7 +19,7 @@ test('ok handler', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -35,14 +35,14 @@ test('ok handler', async t => {
       }
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
+      t.is(path, `api/v1/invocations/${invocationId}/log/0`)
       t.like(options, {
         method: 'PUT'
       })
       t.is(options.body.toString('utf-8'), 'hello\nworld\n')
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -67,7 +67,7 @@ test('ko handler', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -83,14 +83,14 @@ test('ko handler', async t => {
       }
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
+      t.is(path, `api/v1/invocations/${invocationId}/log/0`)
       t.like(options, {
         method: 'PUT'
       })
       t.is(options.body.toString('utf-8'), 'oh\nno\n')
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -121,7 +121,7 @@ test('early worker termination', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -137,14 +137,14 @@ test('early worker termination', async t => {
       }
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}/log/0`)
+      t.is(path, `api/v1/invocations/${invocationId}/log/0`)
       t.like(options, {
         method: 'PUT'
       })
       t.is(options.body.toString('utf-8'), 'moon\nmoon\n')
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         body: {
           status: 'failed',

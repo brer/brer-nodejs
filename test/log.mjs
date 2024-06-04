@@ -20,7 +20,7 @@ test('log full page and final partial', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, 'invoker/v1/invocations/my-invocation/log/0')
+      t.is(path, 'api/v1/invocations/my-invocation/log/0')
       t.like(options, {
         body: {
           byteLength: 128
@@ -28,7 +28,7 @@ test('log full page and final partial', async t => {
       })
     },
     (path, options) => {
-      t.is(path, 'invoker/v1/invocations/my-invocation/log/1')
+      t.is(path, 'api/v1/invocations/my-invocation/log/1')
       t.like(options, {
         body: {
           byteLength: 42

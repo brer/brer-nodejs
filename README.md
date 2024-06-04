@@ -1,4 +1,4 @@
-# Official Node.js bindings for [Brer](https://github.com/brer/brer)
+# Official Node.js runtime for [Brer](https://github.com/brer/brer)
 
 [![npm](https://img.shields.io/npm/v/brer)](https://www.npmjs.com/package/brer)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -19,3 +19,7 @@ async function myTask (payload, ctx) {
 // Run
 brer(myTask)
 ```
+
+## Debug
+
+Set the `NODE_DEBUG` to `brer` to print all internal log messages.

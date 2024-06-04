@@ -17,7 +17,7 @@ test('ok handler', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, { method: 'GET' })
       return {
         body: {
@@ -28,7 +28,7 @@ test('ok handler', async t => {
       }
     },
     path => {
-      t.is(path, `invoker/v1/invocations/${invocationId}/payload`)
+      t.is(path, `api/v1/invocations/${invocationId}/payload`)
       return {
         body: {}
       }
@@ -59,7 +59,7 @@ test('ko handler', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, { method: 'GET' })
       return {
         body: {
@@ -70,7 +70,7 @@ test('ko handler', async t => {
       }
     },
     path => {
-      t.is(path, `invoker/v1/invocations/${invocationId}/payload`)
+      t.is(path, `api/v1/invocations/${invocationId}/payload`)
       return {
         body: {}
       }
@@ -103,7 +103,7 @@ test('no handler', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, { method: 'GET' })
       return {
         body: {
@@ -131,7 +131,7 @@ test('test mode', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, { method: 'GET' })
       return {
         body: {
@@ -173,7 +173,7 @@ test('progress update', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, { method: 'GET' })
       return {
         body: {
@@ -184,13 +184,13 @@ test('progress update', async t => {
       }
     },
     path => {
-      t.is(path, `invoker/v1/invocations/${invocationId}/payload`)
+      t.is(path, `api/v1/invocations/${invocationId}/payload`)
       return {
         body: {}
       }
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -200,7 +200,7 @@ test('progress update', async t => {
       })
     },
     (path, options) => {
-      t.is(path, `invoker/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}`)
       t.like(options, {
         method: 'PUT',
         body: {
