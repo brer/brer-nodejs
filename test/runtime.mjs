@@ -19,7 +19,7 @@ test('ok handler', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -39,10 +39,10 @@ test('ok handler', async t => {
       t.like(options, {
         method: 'PUT'
       })
-      t.is(options.body.toString('utf-8'), 'hello\nworld\n')
+      t.is(options.body.toString('utf-8'), 'hello world\nworld hello\n')
     },
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -67,7 +67,7 @@ test('ko handler', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -87,10 +87,10 @@ test('ko handler', async t => {
       t.like(options, {
         method: 'PUT'
       })
-      t.is(options.body.toString('utf-8'), 'oh\nno\n')
+      t.is(options.body.toString('utf-8'), 'oh no\nnot again\n')
     },
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -121,7 +121,7 @@ test('early worker termination', async t => {
 
   const request = mockHttpClient(
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -141,10 +141,10 @@ test('early worker termination', async t => {
       t.like(options, {
         method: 'PUT'
       })
-      t.is(options.body.toString('utf-8'), 'moon\nmoon\n')
+      t.is(options.body.toString('utf-8'), 'moon moon\nwoff woff\n')
     },
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         body: {
           status: 'failed',

@@ -190,7 +190,7 @@ test('progress update', async t => {
       }
     },
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         method: 'PUT',
         body: {
@@ -200,7 +200,7 @@ test('progress update', async t => {
       })
     },
     (path, options) => {
-      t.is(path, `api/v1/invocations/${invocationId}`)
+      t.is(path, `api/v1/invocations/${invocationId}/status`)
       t.like(options, {
         method: 'PUT',
         body: {
