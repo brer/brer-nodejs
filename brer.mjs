@@ -10,8 +10,8 @@ import { executeRuntime } from './lib/runtime.mjs'
 import { handleInvocation } from './lib/worker.mjs'
 import { asRejected, serializeError } from './lib/util.mjs'
 
-const handlers = {}
-const log = debug('brer')
+const HANDLERS = {}
+const LOG = debug('brer')
 
 export default function brer (oneOrMore) {
   const invocationId = process.env.BRER_INVOCATION_ID
@@ -27,19 +27,19 @@ export default function brer (oneOrMore) {
 
   const app = {
     invocationId,
-    log,
-    request: createHttpClient(url, token, log)
+    log: LOG,
+    request: createHttpClient(url, token, LOG)
   }
 
   const promise = !process.send
     ? executeRuntime(app)
-    : handleInvocation(app, handlers)
+    : handleInvocation(app, HANDLERS)
       .catch(err => asRejected(err))
       .then(obj => process.send(serializeReason(obj)))
 
   promise.then(
     () => {
-      log('all done')
+      LOG('all done')
       shutdown(0)
     },
     err => {
@@ -69,7 +69,7 @@ function shutdown (code) {
       console.error('This function left some running code after its ending.')
       process.exit(code)
     },
-    10000
+    30000
   )
 
   // Let Node.js die :)
@@ -78,11 +78,11 @@ function shutdown (code) {
 
 export function register (oneOrMany, fnHandler) {
   if (typeof oneOrMany === 'string') {
-    registerHandler(handlers, oneOrMany, fnHandler)
+    registerHandler(HANDLERS, oneOrMany, fnHandler)
   } else if (typeof oneOrMany === 'function') {
-    registerGlobalHandler(handlers, oneOrMany)
+    registerGlobalHandler(HANDLERS, oneOrMany)
   } else if (typeof oneOrMany === 'object' && oneOrMany !== null) {
-    mergeHandlers(handlers, oneOrMany)
+    mergeHandlers(HANDLERS, oneOrMany)
   } else {
     throw new TypeError('Unexpected value type')
   }
