@@ -1,6 +1,6 @@
 {
   "name": "brer",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Official Node.js runtime for Brer.",
   "type": "module",
   "main": "./brer.cjs",
